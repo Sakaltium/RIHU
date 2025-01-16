@@ -1,0 +1,24 @@
+@font-face {
+    font-family: "CMU Serif";
+    src: url('styling/fonts/cmunrm.ttf') format("truetype");
+}
+
+@font-face {
+    font-family: "CMU Sans";
+    src: url('styling/fonts/cmunbmr.ttf') format("truetype");
+}
+
+body {
+    background-color: rgb(15, 15, 15);
+    margin: auto;
+}
+
+canvas {
+    border: 2px solid white;
+    border-style: inset;
+}
+
+#topSection {
+    color: white;
+    font-family: "CMU Serif";
+}
