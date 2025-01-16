@@ -20,8 +20,8 @@ function loadData() {
     // For now, the game has no saving.
     if (player.hyp == 1) {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(20, x))
-        let initRingSpeeds = Array.from({length: RINGS}, () => 0.1)
-        let initRingEffects = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(10, x))
+        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.1)
+        let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
 
         for (let i = 0; i < RINGS; i++) {
             Object.assign(player, 
@@ -48,7 +48,7 @@ function formatNormal(num) {
     if (num >= 1e12) {
         return num.toExponential(2).replace('+', '')
     } else {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
     }
     
 }
@@ -57,8 +57,36 @@ function formatEN(num) {
     return num.toFixed(2)
 }
 
+function pointGen() {
+    let effectSum = 0
+    let lapsSum = 0
+
+    for (let i = 0; i < RINGS; i++) {
+        let ringData = player[`r${i + 1}`]
+
+        if (ringData.unlocked) {
+            effectSum += ringData.effect
+            lapsSum += ringData.speed
+        }
+    }
+
+    return new ExpantaNum(effectSum * lapsSum)
+}
+
 function revComplete(ring) {
-    player.points.amount = ExpantaNum.add(player.points.amount, ring)
+    if (player.hyp == 1) {
+        var effectSum = 0
+
+        for (let i = 0; i < RINGS; i++) {
+            let ringData = player[`r${i + 1}`]
+
+            if (ringData.unlocked) {
+                effectSum += ringData.effect
+            }
+        }
+
+        player.points.amount = ExpantaNum.add(player.points.amount, effectSum)
+    }
 }
 
 function update() {
@@ -66,9 +94,14 @@ function update() {
     c.clearRect(0, 0, mainCanvas.width, mainCanvas.height)
     
     for (let i = 0; i < RINGS; i++) {
-        if (player["r" + (i + 1)].unlocked) {
+        let ringData = player[`r${i + 1}`]
+        if (player.hyp == 1) {
+            player[`r${i + 1}`].effect = player[`r${i + 1}`].lapsCeil * player[`r${i + 1}`].effectBase
+        }
+
+        if (ringData.unlocked) {
             c.beginPath()
-            c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (player["r" + (i + 1)].laps) % 1 * 2 * Math.PI, false)
+            c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (ringData.laps) % 1 * 2 * Math.PI, false)
             c.strokeStyle = `hsl(${360 / RINGS * i}, 100%, 70%)`
             c.lineWidth = 25
             c.stroke()
@@ -76,19 +109,21 @@ function update() {
     }
 
     document.getElementById("points").innerHTML = (player.hyp == 1) ? formatNormal(player.points.amount) : formatEN(player.points.amount);
-    document.getElementById("pointGen").innerHTML = (player.hyp == 1) ? formatNormal(player.points.gen) : formatEN(player.points.gen);
+    document.getElementById("pointGen").innerHTML = formatEN(pointGen())
 }
 
 function mainLoop() {
     for (let i = 0; i < RINGS; i++) {
-        if (player["r" + (i + 1)].unlocked) {
-            player["r" + (i + 1)].laps = player["r" + (i + 1)].laps + player["r" + (i + 1)].speed / FPS
+        let ringData = player[`r${i + 1}`]
 
-            if (player["r" + (i + 1)].laps >= player["r" + (i + 1)].lapsCeil) {
-                revComplete(2)
+        if (ringData.unlocked) {
+            ringData.laps = ringData.laps + ringData.speed / FPS
+
+            if (ringData.laps >= ringData.lapsCeil) {
+                revComplete(i + 1)
             }
 
-            player["r" + (i + 1)].lapsCeil = Math.ceil(player["r" + (i + 1)].laps)
+            ringData.lapsCeil = Math.ceil(ringData.laps)
         }
     }
 
