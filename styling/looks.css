@@ -18,3 +18,18 @@ canvas {
 #points {
     font-size: 200%;
 }
+
+.lapBtn {
+    width: calc(100% - 10px);
+    min-height: 100px;
+    font-family: "CMU Sans Serif";
+    font-size: 16px;
+    margin: 0px 5px 10px 5px;
+    border-radius: 5px;
+    transition-duration: 200ms;
+    padding: 10px;
+}
+
+.lapBtn:hover {
+    cursor: pointer;
+}

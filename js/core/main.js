@@ -11,29 +11,39 @@ var player = {
 var testNum = 0
 const RINGS = 8
 const FPS = 30
+var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
+var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 5%)`)
 
 var mainCanvas = document.getElementById("mainCanvas")
 mainCanvas.width = document.getElementById("mainCanvasDiv").style.width.replace('px', '')
 mainCanvas.height = document.getElementById("mainCanvasDiv").style.height.replace('px', '')
 
 function loadData() {
+        // <button class="lapBtn">Circle X<br>Lap speed: {lapspeed} → (after)<br>Cost: x</button>
     // For now, the game has no saving.
+
+    for (let i = 0; i < RINGS; i++) {
+        document.getElementById("lapUpgrades").innerHTML += `<button class="lapBtn" style="color: ${arcColors[i]}; border-color: ${arcColors[i]}; background-color: ${arcColorsSec[i]}">Circle ${i + 1}<br>Lap speed: {lapspeed} → (after)<br>Cost: x</button>`
+    }
+
     if (player.hyp == 1) {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(20, x))
-        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 1 * 1 / Math.sqrt(x + 2))
+        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.25)
         let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
 
         for (let i = 0; i < RINGS; i++) {
             Object.assign(player, 
                 {["r" + (i+1)]: {
                     price: initRingPrices[i],
+                    priceScale: 1.35,
+                    level: 0,
                     speed: initRingSpeeds[i],
                     laps: 0,
                     lapsCeil: 1, // This is used to run the revComplete function every turn, along with laps. See comment in the mainLoop() function.
                     progress: 0,
                     effectBase: initRingEffects[i],
                     effect: 0,
-                    unlocked: (i + 1) ? true : false,
+                    unlocked: (i == 0) ? true : false,
                 }}
             )
         }
@@ -92,8 +102,6 @@ function revComplete(ring) {
 }
 
 function updateFormula() { // Yes... all this just to update that formula.
-    let arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
-
     let formulaText = 'Let '
     let formulaLetterFont = "CMU Serif"
     let formulaLetterSize = "20px"
@@ -163,7 +171,6 @@ function updateFormula() { // Yes... all this just to update that formula.
 function update() {
     let c = mainCanvas.getContext('2d')
     c.clearRect(0, 0, mainCanvas.width, mainCanvas.height)
-    let arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
     
     document.getElementById("formula").innerHTML = updateFormula()
     
