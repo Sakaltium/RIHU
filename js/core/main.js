@@ -30,12 +30,13 @@ function loadData() {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(20, x))
         let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.25)
         let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
+        let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.2 + x * 0.03)
 
         for (let i = 0; i < RINGS; i++) {
             Object.assign(player, 
                 {["r" + (i+1)]: {
                     price: initRingPrices[i],
-                    priceScale: 1.35,
+                    priceScale: initPriceScalings[i],
                     level: 0,
                     speed: initRingSpeeds[i],
                     laps: 0,
