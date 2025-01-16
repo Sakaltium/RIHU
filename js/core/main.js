@@ -1,5 +1,7 @@
 var player = {
+    // hyp is the hyperoperation. 1 represents addition, 2 represents multiplication, 3 represents exponentiation, and so on. Based on whatever this number is, the game loads things differently.
 
+    hyp: 1,
 }
 
 var testNum = 0
@@ -7,22 +9,27 @@ const RINGS = 1
 const FPS = 60
 
 var mainCanvas = document.getElementById("mainCanvas")
-mainCanvas.width = window.innerWidth
-mainCanvas.height = window.innerHeight
+mainCanvas.width = document.getElementById("mainCanvasDiv").style.width.replace('px', '')
+mainCanvas.height = document.getElementById("mainCanvasDiv").style.height.replace('px', '')
 
 function loadData() {
     // For now, the game has no saving.
-    let initRingPrices = [10]
-    let initRingSpeed = [1]
-
-    for (let i = 0; i < RINGS; i++) {
-        Object.assign(player, 
-            {["r" + (i+1)]: {
-                price: initRingPrices[i],
-                speed: initRingSpeed[i],
-                progress: 0,
-            }}
-        )
+    if (player.hyp == 1) {
+        let initRingPrices = []
+        for (let i = 0; i < RINGS; i++) {
+            initRingPrices.push(Math.pow)
+        }
+        let initRingSpeed = [0.5, 1, 2, 3, 4, 5, 6, 7]
+    
+        for (let i = 0; i < RINGS; i++) {
+            Object.assign(player, 
+                {["r" + (i+1)]: {
+                    price: initRingPrices[i],
+                    speed: initRingSpeed[i],
+                    laps: new ExpantaNum(0),
+                }}
+            )
+        }
     }
 }
 
@@ -34,16 +41,16 @@ function update() {
     
     for (let i = 0; i < RINGS; i++) {
         c.beginPath()
-        c.arc(500, 500, 35+40*i, 0, (player["r" + (i + 1)].progress) * 2 * Math.PI, false)
+        c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (player["r" + (i + 1)].laps) % 1 * 2 * Math.PI, false)
         c.strokeStyle = `hsl(${360 / RINGS * i}, 50%, 50%)`
-        c.lineWidth = 15
+        c.lineWidth = 25
         c.stroke()
     }
 }
 
 function mainLoop() {
     for (let i = 0; i < RINGS; i++) {
-        player["r" + (i + 1)].progress = (player["r" + (i + 1)].progress + player["r" + (i + 1)].speed / FPS / 10) % 1
+        player["r" + (i + 1)].laps = ExpantaNum.add(player["r" + (i + 1)].laps, player["r" + (i + 1)].speed / FPS)
     }
 }
 

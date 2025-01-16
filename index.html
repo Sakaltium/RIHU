@@ -8,12 +8,20 @@
     </head>
 
     <body>
-        <div id="topSection" style="width: 500px; height: 500px; border: 2px solid white; margin: auto;">
+        <div id="topSection" style="width: 500px; height: 50px; border: 2px solid white; margin: auto;">
             You have <span id="points">0</span> points.<br>
             <span id="formula">x + y = z (in other words, no formula is available right now)</span>
         </div>
-        
-        <canvas id="mainCanvas"></canvas>
+
+        <div id="mainTab" style="margin: auto; width: 1000px; height: 600px; display: flex;">
+            <div id="lapUpgrades" style="width: 400px; height: 600px;">
+
+            </div>
+
+            <div id="mainCanvasDiv" style="width: 600px; height: 600px;">
+                <canvas id="mainCanvas"></canvas>
+            </div>
+        </div>
 
         <!-- LIBRARIES -->
         <script src="js/lib/ExpantaNum.js"></script>
