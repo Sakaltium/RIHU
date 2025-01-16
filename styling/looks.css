@@ -11,4 +11,10 @@ canvas {
 #topSection {
     color: white;
     font-family: "CMU Sans Serif";
+    text-align: center;
+    font-size: 16px;
+}
+
+#points {
+    font-size: 200%;
 }

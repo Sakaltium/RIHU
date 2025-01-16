@@ -52,7 +52,7 @@ function update() {
         }
     }
 
-    document.getElementById("points").innerHTML = player.points.toFixed(2);
+    document.getElementById("points").innerHTML = (player.hyp == 1) ? player.points : player.points.toFixed(2);
 }
 
 function mainLoop() {
