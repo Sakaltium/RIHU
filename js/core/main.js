@@ -10,7 +10,7 @@ var player = {
 
 var testNum = 0
 const RINGS = 8
-const FPS = 60
+const FPS = 30
 
 var mainCanvas = document.getElementById("mainCanvas")
 mainCanvas.width = document.getElementById("mainCanvasDiv").style.width.replace('px', '')
@@ -20,7 +20,7 @@ function loadData() {
     // For now, the game has no saving.
     if (player.hyp == 1) {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(20, x))
-        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.1)
+        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 1 * 1 / Math.sqrt(x + 2))
         let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
 
         for (let i = 0; i < RINGS; i++) {
@@ -33,7 +33,7 @@ function loadData() {
                     progress: 0,
                     effectBase: initRingEffects[i],
                     effect: 0,
-                    unlocked: (i == 0) ? true : false,
+                    unlocked: (i + 1) ? true : false,
                 }}
             )
         }
@@ -43,7 +43,9 @@ function loadData() {
 loadData()
 
 function formatNormal(num) {
-    var num = num.toNumber()
+    if (new ExpantaNum(num) === num) {
+        var num = num.toNumber()
+    }
 
     if (num >= 1e12) {
         return num.toExponential(2).replace('+', '')
@@ -89,20 +91,92 @@ function revComplete(ring) {
     }
 }
 
+function updateFormula() { // Yes... all this just to update that formula.
+    let arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
+
+    let formulaText = 'Let '
+    let formulaLetterFont = "CMU Serif"
+    let formulaLetterSize = "20px"
+    let formulaLetters = Array.from({length: RINGS}, (_, i) => 65 + i).map(n => String.fromCharCode(n))
+    let effectSum = 0
+
+    for (let i = 0; i < RINGS; i++) {
+        effectSum += player["r" + (i + 1)].effect
+    }
+
+    for (let i = 0; i < formulaLetters.length; i++) {
+        switch (i) {
+            case 6: {
+                formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formulaLetters[i]}</span> and `
+                break
+            }
+
+            case 7: {
+                formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formulaLetters[i]}</span>`
+                break
+
+            }
+
+            default: {
+                formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formulaLetters[i]}</span>, `
+            }
+        }
+    }
+
+    formulaText += " represent the amount of laps of each circle.<br>Your points per lap is:<br><br>"
+
+    if (player.hyp == 1) {
+        for (let i = 0; i < formulaLetters.length; i++) {
+            switch (i) {
+                case 7: {
+                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}${formulaLetters[i]}</span><br>`
+                    break
+    
+                }
+    
+                default: {
+                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}${formulaLetters[i]}</span> + `
+                }
+            }
+        }
+    }
+
+    if (player.hyp == 1) {
+        for (let i = 0; i < formulaLetters.length; i++) {
+            switch (i) {
+                case 7: {
+                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}(${formatNormal(player["r" + (i + 1)].laps)})</span> = ${formatNormal(effectSum)} `
+                    break
+                }
+    
+                default: {
+                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}(${formatNormal(player["r" + (i + 1)].laps)})</span> + `
+                }
+            }
+        }
+    }
+
+
+    return formulaText
+}
+
 function update() {
     let c = mainCanvas.getContext('2d')
     c.clearRect(0, 0, mainCanvas.width, mainCanvas.height)
+    let arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
+    
+    document.getElementById("formula").innerHTML = updateFormula()
     
     for (let i = 0; i < RINGS; i++) {
         let ringData = player[`r${i + 1}`]
         if (player.hyp == 1) {
-            player[`r${i + 1}`].effect = player[`r${i + 1}`].lapsCeil * player[`r${i + 1}`].effectBase
+            player[`r${i + 1}`].effect = (player[`r${i + 1}`].lapsCeil - 1) * player[`r${i + 1}`].effectBase
         }
 
         if (ringData.unlocked) {
             c.beginPath()
             c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (ringData.laps) % 1 * 2 * Math.PI, false)
-            c.strokeStyle = `hsl(${360 / RINGS * i}, 100%, 70%)`
+            c.strokeStyle = arcColors[i]
             c.lineWidth = 25
             c.stroke()
         }
