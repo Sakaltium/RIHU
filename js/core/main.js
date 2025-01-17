@@ -11,6 +11,7 @@ var player = {
 var testNum = 0
 const RINGS = 8
 const FPS = 30
+
 var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
 var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 8%)`)
 
@@ -23,7 +24,7 @@ function loadData() {
     // For now, the game has no saving.
 
     for (let i = 0; i < RINGS; i++) {
-        document.getElementById("lapUpgrades").innerHTML += `<button class="lapBtn" style="color: ${arcColors[i]}; border-color: ${arcColors[i]}; background-color: ${arcColorsSec[i]}"><span style="font-size: 24px;">Circle ${i + 1}</span><br>Lap speed: <span id="lapBtn${i + 1}Current">x</span> → <span id="lapBtn${i + 1}Next">y</span><br>Costs <span id=lapBtn${i + 1}Cost">z<span> points</button>`
+        document.getElementById("lapUpgrades").innerHTML += `<button class="lapBtn" onclick="upgradeCircle(${i})" style="color: ${arcColors[i]}; border-color: ${arcColors[i]}; background-color: ${arcColorsSec[i]}"><span style="font-size: 24px;">Circle ${i + 1} [Level <span id="lap${i + 1}Level">y</span>]</span><br>Lap speed: <span id="lapBtn${i + 1}Current">x</span> → <span id="lapBtn${i + 1}Next">y</span><br>Costs <span id="lapBtn${i + 1}Cost">z</span> points</button>`
     }
 
     let lapBtns = document.getElementsByClassName("lapBtn")
@@ -44,8 +45,8 @@ function loadData() {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(20, x))
         let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.2)
         let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
-        let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.2 + x * 0.03)
-        let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.1 - 0.02 * x, 0.02))
+        let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.25 + x * 0.03)
+        let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.05 - 0.01 * x, 0.01))
 
         for (let i = 0; i < RINGS; i++) {
             Object.assign(player, 
@@ -61,6 +62,7 @@ function loadData() {
                     effectBase: initRingEffects[i],
                     effect: 0,
                     unlocked: (i == 0) ? true : false,
+                    unlockedUpgrade: (i == 0 || i == 1) ? true : false,
                 }}
             )
         }
@@ -69,17 +71,24 @@ function loadData() {
 
 loadData()
 
-function formatNormal(num) {
+function upgradeCircle(n) {
+    console.log(n)
+}
+
+function formatNormal(num, sig = 0) {
+    // type 1 - below 1e12: comma formatted integer, else scientific notation
+    // type 2 - below 1,000: float with 2 decimals, below 1e12: comma formatted integer, else scientific notation 
     if (new ExpantaNum(num) === num) {
         var num = num.toNumber()
     }
 
     if (num >= 1e12) {
         return num.toExponential(2).replace('+', '')
-    } else {
+    } else if (num >= 1000) {
         return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+    } else {
+        return num.toFixed(sig)
     }
-    
 }
 
 function formatEN(num) {
@@ -203,6 +212,15 @@ function update() {
             c.strokeStyle = arcColors[i]
             c.lineWidth = 25
             c.stroke()
+            // lapBtn.Current, lapBtn.Next, lapBtn.Cost
+        }
+
+        // Upon getting five levels of a specific upgrade
+        if (ringData.unlockedUpgrade) {
+            document.getElementById("lapBtn" + (i + 1) + "Current").innerHTML = formatNormal(ringData.speed, 2)
+            document.getElementById("lapBtn" + (i + 1) + "Next").innerHTML = formatNormal(ringData.speed + ringData.levelBase, 2)
+            document.getElementById("lapBtn" + (i + 1) + "Cost").innerHTML = formatNormal(ringData.price, 2)
+            document.getElementById("lap" + (i + 1) + "Level").innerHTML = ringData.level
         }
     }
 
