@@ -26,11 +26,26 @@ function loadData() {
         document.getElementById("lapUpgrades").innerHTML += `<button class="lapBtn" style="color: ${arcColors[i]}; border-color: ${arcColors[i]}; background-color: ${arcColorsSec[i]}">Circle ${i + 1}<br>Lap speed: {lapspeed} → (after)<br>Cost: x</button>`
     }
 
+    let lapBtns = document.getElementsByClassName("lapBtn")
+    
+    for (let i = 0; i < lapBtns.length; i++) {
+        lapBtns[i].addEventListener("mouseover", (e) => {
+            e.target.style.color = arcColorsSec[i]
+            e.target.style.backgroundColor = arcColors[i]
+        })
+
+        lapBtns[i].addEventListener("mouseout", (e) => {
+            e.target.style.color = arcColors[i]
+            e.target.style.backgroundColor = arcColorsSec[i]
+        })
+    }
+
     if (player.hyp == 1) {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(20, x))
         let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.25)
         let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
         let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.2 + x * 0.03)
+        let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.1 - 0.02 * x, 0.02))
 
         for (let i = 0; i < RINGS; i++) {
             Object.assign(player, 
@@ -38,6 +53,7 @@ function loadData() {
                     price: initRingPrices[i],
                     priceScale: initPriceScalings[i],
                     level: 0,
+                    levelBase: initLevelBases[i],
                     speed: initRingSpeeds[i],
                     laps: 0,
                     lapsCeil: 1, // This is used to run the revComplete function every turn, along with laps. See comment in the mainLoop() function.
