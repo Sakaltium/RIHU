@@ -12,7 +12,7 @@ var testNum = 0
 const RINGS = 8
 const FPS = 30
 var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
-var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 5%)`)
+var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 8%)`)
 
 var mainCanvas = document.getElementById("mainCanvas")
 mainCanvas.width = document.getElementById("mainCanvasDiv").style.width.replace('px', '')
@@ -23,18 +23,18 @@ function loadData() {
     // For now, the game has no saving.
 
     for (let i = 0; i < RINGS; i++) {
-        document.getElementById("lapUpgrades").innerHTML += `<button class="lapBtn" style="color: ${arcColors[i]}; border-color: ${arcColors[i]}; background-color: ${arcColorsSec[i]}">Circle ${i + 1}<br>Lap speed: {lapspeed} → (after)<br>Cost: x</button>`
+        document.getElementById("lapUpgrades").innerHTML += `<button class="lapBtn" style="color: ${arcColors[i]}; border-color: ${arcColors[i]}; background-color: ${arcColorsSec[i]}"><span style="font-size: 24px;">Circle ${i + 1}</span><br>Lap speed: <span id="lapBtn${i + 1}Current">x</span> → <span id="lapBtn${i + 1}Next">y</span><br>Costs <span id=lapBtn${i + 1}Cost">z<span> points</button>`
     }
 
     let lapBtns = document.getElementsByClassName("lapBtn")
     
     for (let i = 0; i < lapBtns.length; i++) {
-        lapBtns[i].addEventListener("mouseover", (e) => {
+        lapBtns[i].addEventListener("mouseenter", (e) => {
             e.target.style.color = arcColorsSec[i]
             e.target.style.backgroundColor = arcColors[i]
         })
 
-        lapBtns[i].addEventListener("mouseout", (e) => {
+        lapBtns[i].addEventListener("mouseleave", (e) => {
             e.target.style.color = arcColors[i]
             e.target.style.backgroundColor = arcColorsSec[i]
         })
@@ -42,7 +42,7 @@ function loadData() {
 
     if (player.hyp == 1) {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => 10 * Math.pow(20, x))
-        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.25)
+        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => 0.2)
         let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
         let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.2 + x * 0.03)
         let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.1 - 0.02 * x, 0.02))
