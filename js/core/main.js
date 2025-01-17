@@ -5,7 +5,7 @@ var player = {
 }
 
 const RINGS = 8
-const FPS = 10
+const FPS = 20
 
 var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
 var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 8%)`)
@@ -43,7 +43,7 @@ function loadData() {
         let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.25 + x * 0.05)
         let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.05 - 0.01 * x, 0.01))
 
-        Object.assign(player, {points: 10})
+        Object.assign(player, {points: 1100})
 
         for (let i = 0; i < RINGS; i++) {
             Object.assign(player, 
@@ -61,7 +61,7 @@ function loadData() {
                     effectBase: initRingEffects[i],
                     effect: 0,
                     unlocked: (i == 0) ? true : false,
-                    unlockedUpgrade: (i == 0 || i == 1) ? true : false,
+                    unlockedUpgrade: (i == 0) ? true : false,
                 }}
             )
         }
@@ -219,6 +219,18 @@ function update() {
         }
 
         // Upon getting five levels of a circle, the next one's upgrade button will appear, up to the 8th one.
+        if (ringData.level >= 5) {
+            if (player[`r${i + 2}`].unlockedUpgrade != true) {
+                player[`r${i + 2}`].unlockedUpgrade = true
+            }
+        }
+
+        if (ringData.level == 1) {
+            if (player[`r${i + 1}`].unlocked != true) {
+                player[`r${i + 1}`].unlocked = true
+            }
+        }
+
         if (ringData.unlockedUpgrade) {
             if (document.getElementById("lapBtn" + (i + 1)).style.display != "revert") {
                 document.getElementById("lapBtn" + (i + 1)).style.display = "revert";
