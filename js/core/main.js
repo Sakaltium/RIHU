@@ -7,8 +7,9 @@ var player = {
 const RINGS = 8
 const FPS = 20
 
-var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 70%)`)
-var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 8%)`)
+var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 60%)`)
+var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 10%)`)
+var arcColorsTer = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 40%)`)
 
 var mainCanvas = document.getElementById("mainCanvas")
 mainCanvas.width = document.getElementById("mainCanvasDiv").style.width.replace('px', '')
@@ -27,7 +28,7 @@ function loadData() {
     for (let i = 0; i < lapBtns.length; i++) {
         lapBtns[i].addEventListener("mouseenter", (e) => {
             e.target.style.color = arcColorsSec[i]
-            e.target.style.backgroundColor = arcColors[i]
+            e.target.style.backgroundColor = arcColorsTer[i]
         })
 
         lapBtns[i].addEventListener("mouseleave", (e) => {
@@ -43,7 +44,7 @@ function loadData() {
         let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.25 + x * 0.05)
         let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.05 - 0.01 * x, 0.01))
 
-        Object.assign(player, {points: 1100})
+        Object.assign(player, {points: 0})
 
         for (let i = 0; i < RINGS; i++) {
             Object.assign(player, 
@@ -243,8 +244,8 @@ function update() {
         }
     }
 
-    document.getElementById("points").innerHTML = (player.hyp == 1) ? formatNormal(player.points) : formatEN(player.points);
-    document.getElementById("pointGen").innerHTML = formatEN(pointGen())
+    document.getElementById("points").innerHTML = (player.hyp == 1) ? formatNormal(player.points) : formatNormal(player.points);
+    document.getElementById("pointGen").innerHTML = formatNormal(pointGen(), 2)
 }
 
 function mainLoop() {
