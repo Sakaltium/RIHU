@@ -1,11 +1,15 @@
 @font-face {
     font-family: "CMU Sans Serif";
-    src: url("fonts/cmunbmr.ttf") format('truetype');
+    src: url("fonts/MonospaceTypewriter.ttf") format('truetype');
 }
 
 @font-face {
     font-family: "CMU Serif";
-    src: url("fonts/cmunrm.ttf") format('truetype');
+    src: url("fonts/MonospaceTypewriter.ttf") format('truetype');
+}
+
+::-webkit-scrollbar {
+    display: none;
 }
 
 body {
@@ -13,15 +17,15 @@ body {
     margin: auto;
 }
 
-#topSection {
-    color: white;
+#topSection, #formula {
+    color: rgb(191, 191, 191);
     font-family: "CMU Sans Serif";
     text-align: center;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 #points {
-    font-size: 200%;
+    font-size: 250%;
 }
 
 .lapBtn {

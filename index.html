@@ -10,20 +10,24 @@
     <body>
         <div id="topSection" style="min-width: 500px; min-height: 100px; margin: auto;">
             You have <span id="points">0</span> points.<br>
-            You are gaining <span id="pointGen">0</span> points/sec.<br>
+            You are gaining <span id="pointGen">0</span> points/sec.<br>     
             <br>
+        </div>
+        <br>
+        <br>
+        <div id="mainTab">
+            <div style="margin: auto; width: 900px; height: 600px; display: flex;">
+                <div id="lapUpgrades" style="width: 300px; height: 600px; overflow-y: scroll">
+                </div>
+    
+                <div id="mainCanvasDiv" style="width: 600px; height: 600px;">
+                    <canvas id="mainCanvas"></canvas>
+                </div>
+            </div>
+            
             <span id="formula"></span>
         </div>
-        <br>
-        <br>
-        <div id="mainTab" style="margin: auto; width: 900px; height: 600px; display: flex;">
-            <div id="lapUpgrades" style="width: 300px; height: 600px; overflow-y: scroll">
-            </div>
-
-            <div id="mainCanvasDiv" style="width: 600px; height: 600px;">
-                <canvas id="mainCanvas"></canvas>
-            </div>
-        </div>
+        
 
         <!-- LIBRARIES -->
         <script src="js/lib/ExpantaNum.js"></script>

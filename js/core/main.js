@@ -10,6 +10,7 @@ const FPS = 20
 var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 60%)`)
 var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 10%)`)
 var arcColorsTer = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 40%)`)
+var arcColorsTet = Array.from({length: RINGS}, (_, i) => `hsla(${360 / RINGS * i}, 100%, 60%, 0.1)`)
 
 var mainCanvas = document.getElementById("mainCanvas")
 mainCanvas.width = document.getElementById("mainCanvasDiv").style.width.replace('px', '')
@@ -39,7 +40,7 @@ function loadData() {
 
     if (player.hyp == 1) {
         let initRingPrices = Array.from({length: RINGS}, (_, x) => (x == 0) ? 10 : 50 * Math.pow(20, x))
-        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => Math.max(0.2 - 0.02 * x, 0.1))
+        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => Math.max(1 - 0.02 * x, 0.1))
         let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
         let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.25 + x * 0.05)
         let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.05 - 0.01 * x, 0.01))
@@ -113,7 +114,7 @@ function pointGen() {
     return new ExpantaNum(effectSum * lapsSum)
 }
 
-function revComplete(ring) {
+function revComplete(mult) {
     if (player.hyp == 1) {
         var effectSum = 0
 
@@ -125,12 +126,12 @@ function revComplete(ring) {
             }
         }
 
-        player.points += effectSum
+        player.points += effectSum * mult
     }
 }
 
 function updateFormula() { // Yes... all this just to update that formula.
-    let formulaText = 'Let '
+    let formulaText = ''
     let formulaLetterFont = "CMU Serif"
     let formulaLetterSize = "20px"
     let formulaLetters = Array.from({length: RINGS}, (_, i) => 65 + i).map(n => String.fromCharCode(n))
@@ -138,43 +139,6 @@ function updateFormula() { // Yes... all this just to update that formula.
 
     for (let i = 0; i < RINGS; i++) {
         effectSum += player["r" + (i + 1)].effect
-    }
-
-    for (let i = 0; i < formulaLetters.length; i++) {
-        switch (i) {
-            case 6: {
-                formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formulaLetters[i]}</span> and `
-                break
-            }
-
-            case 7: {
-                formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formulaLetters[i]}</span>`
-                break
-
-            }
-
-            default: {
-                formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formulaLetters[i]}</span>, `
-            }
-        }
-    }
-
-    formulaText += " represent the amount of laps of each circle.<br><br>Your points per lap is:<br>"
-
-    if (player.hyp == 1) {
-        for (let i = 0; i < formulaLetters.length; i++) {
-            switch (i) {
-                case 7: {
-                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}${formulaLetters[i]}</span><br>`
-                    break
-    
-                }
-    
-                default: {
-                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}${formulaLetters[i]}</span> + `
-                }
-            }
-        }
     }
 
     if (player.hyp == 1) {
@@ -213,6 +177,12 @@ function update() {
             c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (ringData.laps) % 1 * 2 * Math.PI, false)
             c.strokeStyle = arcColors[i]
             c.lineWidth = 25
+            c.stroke()
+            
+            c.beginPath()
+            c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (ringData.laps) % 1 * 2 * Math.PI, false)
+            c.strokeStyle = arcColorsTet[i]
+            c.lineWidth = 35
             c.stroke()
 
             player[`r${i + 1}`].speed = ringData.speedInit + ringData.level * ringData.levelBase, 2
@@ -254,9 +224,10 @@ function mainLoop() {
 
         if (ringData.unlocked) {
             ringData.laps = ringData.laps + ringData.speed / FPS
+            console.log(ringData.laps)
 
             if (ringData.laps >= ringData.lapsCeil) {
-                revComplete(i + 1)
+                revComplete(ringData.laps - ringData.lapsCeil + 1)
             }
 
             ringData.lapsCeil = Math.ceil(ringData.laps)
