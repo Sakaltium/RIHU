@@ -6,3 +6,4 @@ Uses ExpantaNum.js.<br>
 In progress.<br>
 MIT License - Read LICENSE.
 https://chatgpt.com
+https://sakaltium.github.io/RIHU
