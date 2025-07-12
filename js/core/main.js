@@ -8,12 +8,6 @@ const arcColors    = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * 
 const arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 10%)`);
 const arcColorsTet = Array.from({length: RINGS}, (_, i) => `hsla(${360 / RINGS * i}, 100%, 60%, 0.1)`);
 
-const LONG_NAMES = [
-  "千", "百万", "十億", "兆", "京", "垓", "𥝱", "穣",
-  "溝", "澗", "正", "載", "極", "恒河沙", "阿僧祇", "那由他",
-  "不可思議", "無量大数", "Un", "Duo", "Tre",
-];
-
 const rebirthCosts = [
   new ExpantaNum("1e12"),
   new ExpantaNum("1e15"),
@@ -27,8 +21,9 @@ const rebirthCosts = [
   new ExpantaNum("1e54"),
   new ExpantaNum("1e66"),
   new ExpantaNum("1e99"),
-  new ExpantaNum("1e149"),
-  new ExpantaNum("1e158"),
+  new ExpantaNum("1e122"),
+  new ExpantaNum("1e155"),
+  new ExpantaNum("1e164"),
   new ExpantaNum("1e208"),
   new ExpantaNum("1e258"),
   new ExpantaNum("1e308"),
@@ -107,7 +102,7 @@ function loadData() {
 }
 
 // --------------------------------------
-// 数字フォーマット（略記＋実数）
+// 数字フォーマット（略記＋元数値）
 // --------------------------------------
 function formatLong(num) {
   num = new ExpantaNum(num);
@@ -135,7 +130,8 @@ function formatLong(num) {
 
   for (let i = 0; i < units.length; i++) {
     if (num.gte(units[i].value)) {
-      return num.div(units[i].value).toFixed(1) + units[i].name;
+      const rounded = Math.round(num.div(units[i].value).toNumber());
+      return `${rounded}${units[i].name}`;
     }
   }
 
