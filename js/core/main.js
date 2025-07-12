@@ -192,7 +192,7 @@ function update() {
       c.beginPath();
       c.arc(300, 300, 35 + 35 * (i - 1), 0, (r.laps % 1) * 2 * Math.PI);
       c.strokeStyle = arcColorsTet[i - 1];
-      c.lineWidth = 35;
+      c.lineWidth = 15;
       c.stroke();
     }
 
