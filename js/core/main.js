@@ -24,6 +24,8 @@ const rebirthCosts = [
   new ExpantaNum("1e21"),
   new ExpantaNum("1e24"),
   new ExpantaNum("1e27"),
+  new ExpantaNum("1e30"),
+  new ExpantaNum("1e36"),
 ];
 
 // プレイヤーデータ
@@ -185,7 +187,7 @@ function update() {
       c.beginPath();
       c.arc(300, 300, 35 + 35 * (i - 1), 0, (r.laps % 1) * 2 * Math.PI);
       c.strokeStyle = arcColors[i - 1];
-      c.lineWidth = 25;
+      c.lineWidth = 15;
       c.stroke();
       c.beginPath();
       c.arc(300, 300, 35 + 35 * (i - 1), 0, (r.laps % 1) * 2 * Math.PI);
