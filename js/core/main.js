@@ -1,243 +1,241 @@
-var player = {
-    // hyp is the hyperoperation. 1 represents addition, 2 represents multiplication, 3 represents exponentiation, and so on. Based on whatever this number is, the game loads things differently. This is a reset that resets the ENTIRE game.
+// --------------------------------------
+// 定数・設定
+// --------------------------------------
+const RINGS = 12;
+const FPS = 20;
 
-    hyp: 1,
+// 円の色設定
+const arcColors    = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 60%)`);
+const arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 10%)`);
+const arcColorsTet = Array.from({length: RINGS}, (_, i) => `hsla(${360 / RINGS * i}, 100%, 60%, 0.1)`);
+
+// 表示用巨大数名称（日本語＋英語併記）
+const LONG_NAMES = [
+  "千", "百万", "十億", "兆", "京", "垓", "𥝱", "穣",
+  "溝", "澗", "正", "載", "極", "恒河沙", "阿僧祇", "那由他",
+  "不可思議", "無量大数", "Un", "Duo", "Tre", /*…さらに必要分…*/
+];
+
+// 転生コスト
+const rebirthCosts = [
+  new ExpantaNum("1e12"),
+  new ExpantaNum("1e15"),
+  new ExpantaNum("1e18"),
+  new ExpantaNum("1e21"),
+  new ExpantaNum("1e24"),
+  new ExpantaNum("1e27"),
+];
+
+// プレイヤー初期データ
+let player = {
+  hyp: 1,
+  points: new ExpantaNum(0),
+  rebirthTier: 0,
+  rebirthPoints: 0,
+};
+
+// --------------------------------------
+// ローカルストレージ操作
+// --------------------------------------
+function saveData() {
+  const save = {
+    points:    player.points.toString(),
+    rebirthTier: player.rebirthTier,
+    rebirthPoints: player.rebirthPoints,
+    rings: []
+  };
+  for (let i = 1; i <= RINGS; i++) {
+    const r = player[`r${i}`];
+    save.rings.push({
+      level: r.level,
+      laps: r.laps,
+      unlocked: r.unlocked,
+      unlockedUpgrade: r.unlockedUpgrade
+    });
+  }
+  localStorage.setItem("circleRebirthSave", JSON.stringify(save));
 }
-
-const RINGS = 8
-const FPS = 20
-
-var arcColors = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 60%)`)
-var arcColorsSec = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 10%)`)
-var arcColorsTer = Array.from({length: RINGS}, (_, i) => `hsl(${360 / RINGS * i}, 100%, 40%)`)
-var arcColorsTet = Array.from({length: RINGS}, (_, i) => `hsla(${360 / RINGS * i}, 100%, 60%, 0.1)`)
-
-var mainCanvas = document.getElementById("mainCanvas")
-mainCanvas.width = document.getElementById("mainCanvasDiv").style.width.replace('px', '')
-mainCanvas.height = document.getElementById("mainCanvasDiv").style.height.replace('px', '')
 
 function loadData() {
-        // <button class="lapBtn">Circle X<br>Lap speed: {lapspeed} → (after)<br>Cost: x</button>
-    // For now, the game has no saving.
+  // 初期化
+  document.getElementById("lapUpgrades").innerHTML = "";
+  for (let i = 0; i < RINGS; i++) {
+    player[`r${i+1}`] = {
+      price:     new ExpantaNum((i===0)?10:50 * Math.pow(20, i)),
+      priceInit: new ExpantaNum((i===0)?10:50 * Math.pow(20, i)),
+      priceScale: 1.25 + i * 0.05,
+      level:     0,
+      levelBase: Math.max(0.05 - 0.01 * i, 0.01),
+      speedInit: 1 - 0.02 * i,
+      speed:     1 - 0.02 * i,
+      laps:      0,
+      lapsCeil:  1,
+      effectBase: Math.pow(10, i),
+      effect:    0,
+      unlocked:  (i===0),
+      unlockedUpgrade: (i===0),
+    };
+    // ボタン作成
+    document.getElementById("lapUpgrades").innerHTML += `
+      <button class="lapBtn" id="lapBtn${i+1}" onclick="upgradeCircle(${i})"
+        style="display:none; color:${arcColors[i]}; background-color:${arcColorsSec[i]}; border-color:${arcColors[i]}">
+        円 ${i+1} [レベル <span id="lap${i+1}Level">0</span>]<br>
+        スピード: <span id="lapBtn${i+1}Current">-</span> →
+                 <span id="lapBtn${i+1}Next">-</span><br>
+        コスト: <span id="lapBtn${i+1}Cost">-</span>
+      </button>`;
+  }
 
-    for (let i = 0; i < RINGS; i++) {
-        document.getElementById("lapUpgrades").innerHTML += `<button class="lapBtn" id="lapBtn${i + 1}" onclick="upgradeCircle(${i})" style="color: ${arcColors[i]}; border-color: ${arcColors[i]}; background-color: ${arcColorsSec[i]}; display: none"><span style="font-size: 24px;">Circle ${i + 1} [Level <span id="lap${i + 1}Level">y</span>]</span><br>Lap speed: <span id="lapBtn${i + 1}Current">x</span> → <span id="lapBtn${i + 1}Next">y</span><br>Costs <span id="lapBtn${i + 1}Cost">z</span> points</button>`
-    }
-
-    let lapBtns = document.getElementsByClassName("lapBtn")
-    
-    for (let i = 0; i < lapBtns.length; i++) {
-        lapBtns[i].addEventListener("mouseenter", (e) => {
-            e.target.style.color = arcColorsSec[i]
-            e.target.style.backgroundColor = arcColorsTer[i]
-        })
-
-        lapBtns[i].addEventListener("mouseleave", (e) => {
-            e.target.style.color = arcColors[i]
-            e.target.style.backgroundColor = arcColorsSec[i]
-        })
-    }
-
-    if (player.hyp == 1) {
-        let initRingPrices = Array.from({length: RINGS}, (_, x) => (x == 0) ? 10 : 50 * Math.pow(20, x))
-        let initRingSpeeds = Array.from({length: RINGS}, (_, x) => Math.max(1 - 0.02 * x, 0.1))
-        let initRingEffects = Array.from({length: RINGS}, (_, x) => Math.pow(10, x))
-        let initPriceScalings = Array.from({length: RINGS}, (_, x) => 1.25 + x * 0.05)
-        let initLevelBases = Array.from({length: RINGS}, (_, x) => Math.max(0.05 - 0.01 * x, 0.01))
-
-        Object.assign(player, {points: 0})
-
-        for (let i = 0; i < RINGS; i++) {
-            Object.assign(player, 
-                {["r" + (i+1)]: {
-                    price: initRingPrices[i],
-                    priceInit: initRingPrices[i],
-                    priceScale: initPriceScalings[i],
-                    level: 0,
-                    levelBase: initLevelBases[i],
-                    speed: initRingSpeeds[i],
-                    speedInit: initRingSpeeds[i],
-                    laps: 0,
-                    lapsCeil: 1, // This is used to run the revComplete function every turn, along with laps. See comment in the mainLoop() function.
-                    progress: 0,
-                    effectBase: initRingEffects[i],
-                    effect: 0,
-                    unlocked: (i == 0) ? true : false,
-                    unlockedUpgrade: (i == 0) ? true : false,
-                }}
-            )
-        }
-    }
+  // セーブデータがあれば復元
+  const saved = JSON.parse(localStorage.getItem("circleRebirthSave") || "null");
+  if (saved) {
+    player.points = new ExpantaNum(saved.points);
+    player.rebirthTier = saved.rebirthTier;
+    player.rebirthPoints = saved.rebirthPoints;
+    saved.rings.forEach((rdata, i) => {
+      const r = player[`r${i+1}`];
+      r.level = rdata.level;
+      r.laps  = rdata.laps;
+      r.unlocked = rdata.unlocked;
+      r.unlockedUpgrade = rdata.unlockedUpgrade;
+    });
+  }
 }
 
-loadData()
+// --------------------------------------
+// 数字フォーマット
+// --------------------------------------
+function formatLong(num) {
+  num = new ExpantaNum(num);
+  if (num.lt(1e3)) return num.toFixed(0);
+  const tier = Math.floor(num.log10() / 3) - 1;
+  return LONG_NAMES[tier] || `e${(tier+1)*3}`;
+}
 
+// --------------------------------------
+// ゲームロジック
+// --------------------------------------
 function upgradeCircle(n) {
-    if (player.points >= player[`r${n + 1}`].price) {
-        player.points -= player[`r${n + 1}`].price
-        player[`r${n + 1}`].level += 1
-    }
+  const r = player[`r${n+1}`];
+  if (player.points.gte(r.price)) {
+    player.points = player.points.sub(r.price);
+    r.level++;
+  }
 }
 
-function formatNormal(num, sig = 0) {
-    // type 1 - below 1e12: comma formatted integer, else scientific notation
-    // type 2 - below 1,000: float with 2 decimals, below 1e12: comma formatted integer, else scientific notation 
-    num = (new ExpantaNum(num) === num) ? num.toNumber() : num
-
-    if (num >= 1e12) {
-        return num.toExponential(2).replace('+', '')
-    } else if (num >= 1000) {
-        return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-    } else {
-        return num.toFixed(sig)
+function rebirth() {
+  const cost = rebirthCosts[player.rebirthTier] || new ExpantaNum("1e999");
+  if (player.points.gte(cost)) {
+    player.points = new ExpantaNum(0);
+    player.rebirthPoints++;
+    player.rebirthTier++;
+    // 円をリセット
+    for (let i = 1; i <= RINGS; i++) {
+      const r = player[`r${i}`];
+      r.level = 0;
+      r.laps  = 0;
+      r.unlocked = (i===1);
+      r.unlockedUpgrade = (i===1);
     }
-}
-
-function formatEN(num) {
-    num = (new ExpantaNum(num) === num) ? num : new ExpantaNum(num)
-    return num.toFixed(2)
+  }
 }
 
 function pointGen() {
-    let effectSum = 0
-    let lapsSum = 0
-
-    for (let i = 0; i < RINGS; i++) {
-        let ringData = player[`r${i + 1}`]
-
-        if (ringData.unlocked) {
-            effectSum += ringData.effect
-            lapsSum += ringData.speed
-        }
-    }
-
-    return new ExpantaNum(effectSum * lapsSum)
+  let sum = new ExpantaNum(0);
+  for (let i = 1; i <= RINGS; i++) {
+    const r = player[`r${i}`];
+    if (r.unlocked) sum = sum.add(r.effect);
+  }
+  return sum;
 }
 
-function revComplete(mult) {
-    if (player.hyp == 1) {
-        var effectSum = 0
-
-        for (let i = 0; i < RINGS; i++) {
-            let ringData = player[`r${i + 1}`]
-
-            if (ringData.unlocked) {
-                effectSum += ringData.effect
-            }
-        }
-
-        player.points += effectSum * mult
-    }
+function updateFormula() {
+  let str = "";
+  for (let i = 1; i <= RINGS; i++) {
+    const r = player[`r${i}`];
+    str += `<span style="color:${arcColors[i-1]};">
+              ${formatLong(r.effectBase)}×${r.lapsCeil-1}
+            </span>＋`;
+  }
+  return str.slice(0, -1);
 }
 
-function updateFormula() { // Yes... all this just to update that formula.
-    let formulaText = ''
-    let formulaLetterFont = "CMU Serif"
-    let formulaLetterSize = "20px"
-    let formulaLetters = Array.from({length: RINGS}, (_, i) => 65 + i).map(n => String.fromCharCode(n))
-    let effectSum = 0
-
-    for (let i = 0; i < RINGS; i++) {
-        effectSum += player["r" + (i + 1)].effect
-    }
-
-    if (player.hyp == 1) {
-        for (let i = 0; i < formulaLetters.length; i++) {
-            switch (i) {
-                case 7: {
-                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}(${formatNormal(player["r" + (i + 1)].lapsCeil - 1)})</span> = ${formatNormal(effectSum)} `
-                    break
-                }
-    
-                default: {
-                    formulaText += `<span style="font-family: ${formulaLetterFont}; font-size: ${formulaLetterSize}; color: ${arcColors[i]}">${formatNormal(player["r" + (i + 1)].effectBase)}(${formatNormal(player["r" + (i + 1)].lapsCeil - 1)})</span> + `
-                }
-            }
-        }
-    }
-
-
-    return formulaText
-}
-
+// --------------------------------------
+// 描画＆更新ループ
+// --------------------------------------
 function update() {
-    let c = mainCanvas.getContext('2d')
-    c.clearRect(0, 0, mainCanvas.width, mainCanvas.height)
-    
-    document.getElementById("formula").innerHTML = updateFormula()
-    
-    for (let i = 0; i < RINGS; i++) {
-        let ringData = player[`r${i + 1}`]
-        if (player.hyp == 1) {
-            player[`r${i + 1}`].effect = (player[`r${i + 1}`].lapsCeil - 1) * player[`r${i + 1}`].effectBase
-        }
+  const c = mainCanvas.getContext("2d");
+  c.clearRect(0, 0, 600, 600);
 
-        if (ringData.unlocked) {
-            c.beginPath()
-            c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (ringData.laps) % 1 * 2 * Math.PI, false)
-            c.strokeStyle = arcColors[i]
-            c.lineWidth = 25
-            c.stroke()
-            
-            c.beginPath()
-            c.arc(mainCanvas.width / 2, mainCanvas.height / 2, 35+35*i, 0, (ringData.laps) % 1 * 2 * Math.PI, false)
-            c.strokeStyle = arcColorsTet[i]
-            c.lineWidth = 35
-            c.stroke()
+  document.getElementById("points").textContent       = formatLong(player.points);
+  document.getElementById("pointGen").textContent     = formatLong(pointGen());
+  document.getElementById("rebirthPoints").textContent = player.rebirthPoints;
+  document.getElementById("formula").innerHTML        = updateFormula();
 
-            player[`r${i + 1}`].speed = ringData.speedInit + ringData.level * ringData.levelBase, 2
-            player[`r${i + 1}`].price = ringData.priceInit * Math.pow(ringData.priceScale, ringData.level)
-        }
+  for (let i = 1; i <= RINGS; i++) {
+    const r = player[`r${i}`];
+    // 効果・速度・価格更新
+    r.effect = (r.lapsCeil - 1) * r.effectBase;
+    r.speed  = r.speedInit + r.level * r.levelBase;
+    r.price  = r.priceInit.mul(Math.pow(r.priceScale, r.level));
 
-        // Upon getting five levels of a circle, the next one's upgrade button will appear, up to the 8th one.
-        if (ringData.level >= 5) {
-            if (player[`r${i + 2}`].unlockedUpgrade != true) {
-                player[`r${i + 2}`].unlockedUpgrade = true
-            }
-        }
-
-        if (ringData.level == 1) {
-            if (player[`r${i + 1}`].unlocked != true) {
-                player[`r${i + 1}`].unlocked = true
-            }
-        }
-
-        if (ringData.unlockedUpgrade) {
-            if (document.getElementById("lapBtn" + (i + 1)).style.display != "revert") {
-                document.getElementById("lapBtn" + (i + 1)).style.display = "revert";
-            }
-
-            document.getElementById("lapBtn" + (i + 1) + "Current").innerHTML = formatNormal(ringData.speed, 2)
-            document.getElementById("lapBtn" + (i + 1) + "Next").innerHTML = formatNormal(ringData.speed + ringData.levelBase, 2)
-            document.getElementById("lapBtn" + (i + 1) + "Cost").innerHTML = formatNormal(ringData.price, 2)
-            document.getElementById("lap" + (i + 1) + "Level").innerHTML = ringData.level
-        }
+    // 円の描画
+    if (r.unlocked) {
+      c.beginPath();
+      c.arc(300, 300, 35 + 35*(i-1), 0, (r.laps%1)*2*Math.PI);
+      c.strokeStyle = arcColors[i-1];
+      c.lineWidth = 25;
+      c.stroke();
+      c.beginPath();
+      c.arc(300, 300, 35 + 35*(i-1), 0, (r.laps%1)*2*Math.PI);
+      c.strokeStyle = arcColorsTet[i-1];
+      c.lineWidth = 35;
+      c.stroke();
     }
 
-    document.getElementById("points").innerHTML = (player.hyp == 1) ? formatNormal(player.points) : formatNormal(player.points);
-    document.getElementById("pointGen").innerHTML = formatNormal(pointGen(), 2)
+    // アップグレード解放
+    if (r.level >= 5 && player[`r${i+1}`]) {
+      player[`r${i+1}`].unlockedUpgrade = true;
+    }
+    // ボタン表示＆更新
+    if (r.unlockedUpgrade) {
+      r.unlocked = true;
+      const btn = document.getElementById(`lapBtn${i}`);
+      btn.style.display = "block";
+      document.getElementById(`lapBtn${i}Current`).textContent = r.speed.toFixed(2);
+      document.getElementById(`lapBtn${i}Next`).textContent    = (r.speed + r.levelBase).toFixed(2);
+      document.getElementById(`lapBtn${i}Cost`).textContent    = formatLong(r.price);
+      document.getElementById(`lap${i}Level`).textContent      = r.level;
+    }
+  }
+
+  // 転生ボタン表示判定
+  const nextCost = rebirthCosts[player.rebirthTier] || new ExpantaNum("1e999");
+  document.getElementById("rebirthBtn").style.display =
+    player.points.gte(nextCost) ? "inline-block" : "none";
+
+  // セーブ
+  saveData();
 }
 
 function mainLoop() {
-    for (let i = 0; i < RINGS; i++) {
-        let ringData = player[`r${i + 1}`]
-
-        if (ringData.unlocked) {
-            ringData.laps = ringData.laps + ringData.speed / FPS
-            console.log(ringData.laps)
-
-            if (ringData.laps >= ringData.lapsCeil) {
-                revComplete(ringData.laps - ringData.lapsCeil + 1)
-            }
-
-            ringData.lapsCeil = Math.ceil(ringData.laps)
-        }
+  for (let i = 1; i <= RINGS; i++) {
+    const r = player[`r${i}`];
+    if (r.unlocked) {
+      r.laps += r.speed / FPS;
+      if (r.laps >= r.lapsCeil) {
+        player.points = player.points.add(r.effect);
+      }
+      r.lapsCeil = Math.ceil(r.laps);
     }
-
+  }
 }
 
-window.setInterval(function() {
-    mainLoop()
-    update()
-
-}, 1000/FPS)
+// --------------------------------------
+// 起動時処理
+// --------------------------------------
+loadData();
+setInterval(() => {
+  mainLoop();
+  update();
+}, 1000 / FPS);
