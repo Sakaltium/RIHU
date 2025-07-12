@@ -1,38 +1,31 @@
 <!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>円と転生ゲーム</title>
+    <link rel="stylesheet" href="styling/looks.css">
+</head>
+<body>
+    <div id="topSection">
+        現在のポイント: <span id="points">0</span><br>
+        毎秒ポイント: <span id="pointGen">0</span><br>
+        転生ポイント: <span id="rebirthPoints">0</span><br>
+        <button id="rebirthBtn" onclick="rebirth()" style="display:none;">転生する</button>
+    </div>
 
-<html>
-    <head>
-        <title>Testing Game</title>
-        <link rel="stylesheet" type="text/css" href="styling/looks.css">
-        <meta charset="UTF-8">
-    </head>
-
-    <body>
-        <div id="topSection" style="min-width: 500px; min-height: 100px; margin: auto;">
-            You have <span id="points">0</span> points.<br>
-            You are gaining <span id="pointGen">0</span> points/sec.<br>     
-            <br>
-        </div>
-        <br>
-        <br>
-        <div id="mainTab">
-            <div style="margin: auto; width: 900px; height: 600px; display: flex;">
-                <div id="lapUpgrades" style="width: 300px; height: 600px; overflow-y: scroll">
-                </div>
-    
-                <div id="mainCanvasDiv" style="width: 600px; height: 600px;">
-                    <canvas id="mainCanvas"></canvas>
-                </div>
+    <div id="mainTab">
+        <div style="display: flex; width: 1000px; margin: auto;">
+            <div id="lapUpgrades" style="width: 400px; height: 600px; overflow-y: scroll;"></div>
+            <div id="mainCanvasDiv" style="width: 600px; height: 600px;">
+                <canvas id="mainCanvas" width="600" height="600"></canvas>
             </div>
-            
-            <span id="formula"></span>
         </div>
-        
+        <div id="formula"></div>
+    </div>
 
-        <!-- LIBRARIES -->
-        <script src="js/lib/ExpantaNum.js"></script>
-
-        <!-- CORE -->
-        <script src="js/core/main.js"></script>
-    </body>
+    <!-- 高精度数用ライブラリ -->
+    <script src="js/lib/ExpantaNum.js"></script>
+    <!-- コアスクリプト -->
+    <script src="js/core/main.js"></script>
+</body>
 </html>
